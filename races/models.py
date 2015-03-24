@@ -15,5 +15,6 @@ class Race(models.Model):
 class Results(models.Model):
 	race = models.ForeignKey(Race)
 	athlete = models.ForeignKey(Athlete)
-	record = models.FloatField()
-	position = models.IntegerField()
+	record = models.FloatField(blank=True)
+	position = models.IntegerField(blank=True)
+	extra = models.CharField(max_length=2, blank=True)
