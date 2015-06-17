@@ -36,6 +36,14 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'bolt',
+    'athletes',
+    'clubs',
+    'masters',
+    'media',
+    'meetings',
+    'races',
+    'trainers'
 )
 
 MIDDLEWARE_CLASSES = (

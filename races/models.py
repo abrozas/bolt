@@ -5,16 +5,16 @@ from races import settings as races_settings
 
 
 class Race(models.Model):
-	type = models.CharField(max_length=2, choices=races_settings.RACE_TYPES)
-	category = models.CharField(max_length=50)
-	round = models.CharField(max_length=50)
-	description = models.TextField(blank=True)
-	meeting = models.ForeignKey(Meeting)
+    type = models.CharField(max_length=2, choices=races_settings.RACES_TYPES.items())
+    category = models.CharField(max_length=50)
+    round = models.CharField(max_length=50)
+    description = models.TextField(blank=True)
+    meeting = models.ForeignKey(Meeting)
 
 
-class Results(models.Model):
-	race = models.ForeignKey(Race)
-	athlete = models.ForeignKey(Athlete)
-	record = models.FloatField(blank=True)
-	position = models.IntegerField(blank=True)
-	extra = models.CharField(max_length=2, blank=True)
+class Result(models.Model):
+    race = models.ForeignKey(Race)
+    athlete = models.ForeignKey(Athlete)
+    record = models.FloatField(blank=True)
+    position = models.IntegerField(blank=True)
+    extra = models.CharField(max_length=2, blank=True)
