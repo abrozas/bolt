@@ -30,6 +30,7 @@ class Command(BaseCommand):
                     reader = csv.reader(csvfile, delimiter=';')
                     race = ""
                     csv_num_line = 0
+                    position = 0
                     for row in reader:
                         csv_num_line += 1
                         try:
@@ -40,16 +41,17 @@ class Command(BaseCommand):
 
                             dict_line = self.line_to_dict(row)
 
-                            if dict_line.get('athlete') == '' or race == '':
+                            if len(dict_line.get('athlete')) < 2 or race == '':
                                 race = self.get_race(dict_line)
-                                #print race
+                                position = 0
                                 continue
                             else:
                                 # We get the athlete
                                 athlete = self.get_athlete(dict_line)
+                                position += 1
                                 if dict_line.get('club'):
                                     self.add_athlete_to_club(athlete, dict_line.get('club'), dict_line.get('season'))
-                                self.add_result(athlete, race, dict_line)
+                                self.add_result(athlete, race, dict_line, position)
                         except Exception, e:
                             print csv_num_line, ':', e.message
 
@@ -113,7 +115,6 @@ class Command(BaseCommand):
         athlete = Athlete.get_by_name(line[1])
 
     def get_race(self, line_dict):
-        #print line_dict
 
         meeting_data = {
             'name': line_dict.get('event'),
@@ -129,7 +130,7 @@ class Command(BaseCommand):
 
         type = 'TT' if 'm' in line_dict.get('race') else 'LE'
         try:
-            return Race.objects.get(type=type, category=line_dict.get('category'), round=line_dict.get('round'),
+            return Race.objects.get(type=type, category=line_dict.get('category'), round=line_dict.get('round'), event=line_dict.get('race'),
                                     meeting=meeting)
         except Race.DoesNotExist:
 
@@ -153,10 +154,14 @@ class Command(BaseCommand):
 
     def get_athlete(self, dict_line):
         try:
-            return Athlete.objects.get(slug=self.slugify(dict_line.get('athlete')))
+            athlete = Athlete.objects.get(slug=self.slugify(dict_line.get('athlete')))
+            athlete.set_name(dict_line.get('athlete'))
+            athlete.save()
+            return athlete
+
         except Athlete.DoesNotExist:
             athlete = Athlete()
-            athlete.name = dict_line.get('athlete')
+            athlete.set_name(dict_line.get('athlete'))
             athlete.slug = self.slugify(dict_line.get('athlete'))
             athlete.save()
             return athlete
@@ -186,7 +191,7 @@ class Command(BaseCommand):
             clubForAthlete = ClubForAthlete(athlete=athlete, club=club, season=season)
             clubForAthlete.save()
 
-    def add_result(self, athlete, race, dict_line):
+    def add_result(self, athlete, race, dict_line, position):
 
         try:
             result = Result.objects.get(athlete=athlete, race=race)
@@ -196,5 +201,7 @@ class Command(BaseCommand):
             result.athlete = athlete
 
         result.set_record(dict_line.get('record'))
-        result.position = dict_line.get('position') if dict_line.get('position') != "" else None
+        if result.record is None:
+            position = None
+        result.position = dict_line.get('position') if dict_line.get('position') != "" else position
         result.save()

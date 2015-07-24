@@ -25,23 +25,23 @@ class Result(models.Model):
     extra = models.CharField(max_length=2, blank=True)
 
     def set_record(self, value):
-            match = re.compile("^([0-9]+)[,-.]([0-9]+)$").match(value)
-            if match:
-                groups = match.groups()
-                self.record = float(groups[0] + '.' + groups[1])
-                return
+        match = re.compile("^([0-9]+)[,-.]([0-9]+)$").match(value)
+        if match:
+            groups = match.groups()
+            self.record = float(groups[0] + '.' + groups[1])
+            return
 
-            match = re.compile("^([0-9]+):([0-9]+)[,-.]([0-9]+)$").match(value)
-            if match:
-                groups = match.groups()
-                self.record = float(groups[0])*60 + float(groups[1] + '.' + groups[2])
-                return
+        match = re.compile("^([0-9]+):([0-9]+)[,-.]([0-9]+)$").match(value)
+        if match:
+            groups = match.groups()
+            self.record = float(groups[0])*60 + float(groups[1] + '.' + groups[2])
+            return
 
-            match = re.compile("^([A-Z]+)$").match(value.upper())
-            if match:
-                self.record = None
-                self.extra = value
-                return
+        match = re.compile("^([A-Z]+)$").match(value.upper())
+        if match:
+            self.record = None
+            self.extra = value
+            return
 
     def __unicode__(self):
         return unicode(self.race.event) + u'  ' + unicode(self.race.meeting) + ': ' + unicode(self.position) + u' | ' + unicode(self.athlete) + u' | ' + unicode(self.record)

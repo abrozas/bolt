@@ -1,3 +1,4 @@
+import re
 from clubs.models import Club
 from masters import settings as masters_settings
 from django.db import models
@@ -18,6 +19,18 @@ class Athlete(models.Model):
 
     def __unicode__(self):
         return unicode(self.name) + u' ' + unicode(self.surname)
+
+    def set_name(self, name):
+        match = re.compile("^(.+),(.+)$").match(unicode(name.upper()))
+        if match:
+            groups = match.groups()
+            self.name = u' '.join(item.capitalize() for item in groups[1].strip().split())
+            self.surname = u' '.join(item.capitalize() for item in groups[0].strip().split())
+            return
+
+        else:
+            self.name = name
+            return
 
 class ClubForAthlete(models.Model):
     athlete = models.ForeignKey(Athlete)
