@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+# -*- coding: iso-8859-1 -*-
 import csv
 from clubs.models import Club
 import re
@@ -20,7 +20,7 @@ class Command(BaseCommand):
         parser.add_argument('file', nargs=1, type=str)
 
     def handle(self, *args, **options):
-        print options.get('file')[0]
+        #print options.get('file')[0]
         file_name = options.get('file')[0]
         try:
             is_csv = self.is_csv_file(file_name, delimiter=';')
@@ -28,25 +28,30 @@ class Command(BaseCommand):
             if len(is_csv) == 0:
                 with open(file_name, 'rbU') as csvfile:
                     reader = csv.reader(csvfile, delimiter=';')
-                    prueba = ""
+                    race = ""
+                    csv_num_line = 0
                     for row in reader:
-                        if row == ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '']:
-                            continue
-                        if row[1] == 'Atleta':
-                            continue
+                        csv_num_line += 1
+                        try:
+                            if row == ['', '', '', '', '', '', '', '', '', '', '', '', '', '', '']:
+                                continue
+                            if row[1] == 'Atleta':
+                                continue
 
-                        dict_line = self.line_to_dict(row)
+                            dict_line = self.line_to_dict(row)
 
-                        if dict_line.get('athlete') == '' or prueba == '':
-                            race = self.get_race(dict_line)
-                            print race
-                            continue
-                        else:
-                            # We get the athlete
-                            athlete = self.get_athlete(dict_line)
-                            if dict_line.get('club'):
-                                self.add_athlete_to_club(athlete, dict_line.get('club'), dict_line.get('season'))
-                            self.add_result(athlete, race, dict_line)
+                            if dict_line.get('athlete') == '' or race == '':
+                                race = self.get_race(dict_line)
+                                #print race
+                                continue
+                            else:
+                                # We get the athlete
+                                athlete = self.get_athlete(dict_line)
+                                if dict_line.get('club'):
+                                    self.add_athlete_to_club(athlete, dict_line.get('club'), dict_line.get('season'))
+                                self.add_result(athlete, race, dict_line)
+                        except Exception, e:
+                            print csv_num_line, ':', e.message
 
             else:
                 print 'Not a valid csv'
@@ -71,7 +76,7 @@ class Command(BaseCommand):
     def line_to_dict(self, line):
         return {
             "position": line[0],
-            "athlete": line[1],
+            "athlete": unicode(line[1].decode('iso-8859-1')),
             "club": line[2],
             "record": line[3],
             "race": line[4],
@@ -89,7 +94,7 @@ class Command(BaseCommand):
 
     def read_line(self, line):
         # Columns
-        # 0: PosiciÃ³n
+        # 0: Posición
         # 1: Atleta
         # 2: Club
         # 3: Marca
@@ -99,16 +104,16 @@ class Command(BaseCommand):
         # 7: Evento
         # 8: Evento Resumido
         # 9: Fecha
-        # 10: AÃ±o
+        # 10: Año
         # 11: Ciudad
         # 12: Meeting type
-        # 13: VÃ­deo
+        # 13: Vídeo
         # 14: Observaciones
         position = line[0]
         athlete = Athlete.get_by_name(line[1])
 
     def get_race(self, line_dict):
-        print line_dict
+        #print line_dict
 
         meeting_data = {
             'name': line_dict.get('event'),
@@ -120,16 +125,18 @@ class Command(BaseCommand):
         }
 
         meeting = self.get_meeting(meeting_data)
-        print meeting
+        #print meeting
 
         type = 'TT' if 'm' in line_dict.get('race') else 'LE'
         try:
-            return Race.objects.get(type=type, category=line_dict.get('category'), round=line_dict.get('round'), meeting=meeting)
+            return Race.objects.get(type=type, category=line_dict.get('category'), round=line_dict.get('round'),
+                                    meeting=meeting)
         except Race.DoesNotExist:
 
             race = Race()
             race.type = 'TT' if 'm' in line_dict.get('race') else 'LE'
             race.category = line_dict.get('category')
+            race.event = line_dict.get('race')
             race.round = line_dict.get('round')
             race.meeting = meeting
             race.save()
@@ -154,7 +161,7 @@ class Command(BaseCommand):
             athlete.save()
             return athlete
 
-    def slugify(text, delim=u'-'):
+    def slugify(self, text, delim=u'-'):
         """Generates an slightly worse ASCII-only slug."""
         _punct_re = re.compile(r'[\t !"#$%&\'()*\-/<=>?@\[\\\]^_`{|},.]+')
         result = []
@@ -182,12 +189,12 @@ class Command(BaseCommand):
     def add_result(self, athlete, race, dict_line):
 
         try:
-            result =Result.objects.get(athlete=athlete, race=race)
+            result = Result.objects.get(athlete=athlete, race=race)
         except Result.DoesNotExist:
             result = Result()
             result.race = race
             result.athlete = athlete
 
-        result.record = dict_line.get('record')
-        result.position = dict_line.get('position')
+        result.set_record(dict_line.get('record'))
+        result.position = dict_line.get('position') if dict_line.get('position') != "" else None
         result.save()

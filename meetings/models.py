@@ -9,3 +9,6 @@ class Meeting(models.Model):
     season = models.CharField(max_length=4)
     city = models.CharField(max_length=100)
     type = models.CharField(max_length=2, choices=meetings_settings.MEETINGS_TYPE.items())
+
+    def __unicode__(self):
+        return unicode(self.season) + u' - ' + unicode(self.name)
