@@ -5,6 +5,6 @@ from athletes.api import AthletesViewSet
 
 router = SimpleRouter()
 
-router.register('athletes', AthletesViewSet, base_name='athletes')
+router.register(r'athletes', AthletesViewSet, base_name='athletes')
 
 urlpatterns = router.urls
