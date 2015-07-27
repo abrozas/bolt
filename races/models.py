@@ -22,7 +22,7 @@ class Result(models.Model):
     athlete = models.ForeignKey(Athlete)
     record = models.FloatField(blank=True, null=True)
     position = models.IntegerField(blank=True, null=True)
-    extra = models.CharField(max_length=2, blank=True)
+    extra = models.CharField(max_length=3, blank=True)
 
     def set_record(self, value):
         match = re.compile("^([0-9]+)[,-.]([0-9]+)$").match(value)
@@ -40,7 +40,7 @@ class Result(models.Model):
         match = re.compile("^([A-Z]+)$").match(value.upper())
         if match:
             self.record = None
-            self.extra = value
+            self.extra = value[:3]
             return
 
     def __unicode__(self):

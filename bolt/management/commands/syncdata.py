@@ -1,4 +1,4 @@
-# -*- coding: iso-8859-1 -*-
+# -*- coding: utf-8 -*-
 import csv
 from clubs.models import Club
 import re
@@ -16,6 +16,10 @@ from unicodedata import normalize
 class Command(BaseCommand):
     help = _(u'Add results')
 
+    def reencode(self, file):
+        for line in file:
+            yield line.decode('iso-8859-1').encode('utf-8')
+
     def add_arguments(self, parser):
         parser.add_argument('file', nargs=1, type=str)
 
@@ -27,7 +31,7 @@ class Command(BaseCommand):
 
             if len(is_csv) == 0:
                 with open(file_name, 'rbU') as csvfile:
-                    reader = csv.reader(csvfile, delimiter=';')
+                    reader = csv.reader(self.reencode(csvfile), delimiter=';')
                     event_race = ""
                     csv_num_line = 0
                     position = 0
@@ -82,7 +86,7 @@ class Command(BaseCommand):
             "athlete": unicode(line[1].decode('iso-8859-1')),
             "club": (line[2])[:3],
             "record": line[3].strip(),
-            "race": line[4],
+            "race": line[4].decode('iso-8859-1'),
             "category": line[5],
             "round": line[6],
             "event": line[7].decode('iso-8859-1'),
@@ -97,7 +101,7 @@ class Command(BaseCommand):
 
     def read_line(self, line):
         # Columns
-        # 0: Posici�n
+        # 0: Posiciï¿½n
         # 1: Atleta
         # 2: Club
         # 3: Marca
@@ -107,10 +111,10 @@ class Command(BaseCommand):
         # 7: Evento
         # 8: Evento Resumido
         # 9: Fecha
-        # 10: A�o
+        # 10: Aï¿½o
         # 11: Ciudad
         # 12: Meeting type
-        # 13: V�deo
+        # 13: Vï¿½deo
         # 14: Observaciones
         position = line[0]
         athlete = Athlete.get_by_name(line[1])
