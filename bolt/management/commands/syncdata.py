@@ -53,7 +53,7 @@ class Command(BaseCommand):
                                     self.add_athlete_to_club(athlete, dict_line.get('club'), dict_line.get('season'))
                                 self.add_result(athlete, race, dict_line, position)
                         except Exception, e:
-                            print csv_num_line, ':', e.message
+                            print csv_num_line, ':', e
 
             else:
                 print 'Not a valid csv'
@@ -79,7 +79,7 @@ class Command(BaseCommand):
         return {
             "position": line[0],
             "athlete": unicode(line[1].decode('iso-8859-1')),
-            "club": line[2],
+            "club": (line[2])[:3],
             "record": line[3],
             "race": line[4],
             "category": line[5],
@@ -88,7 +88,7 @@ class Command(BaseCommand):
             "event_shorten": line[8].decode('iso-8859-1'),
             "date": line[9],
             "season": line[10],
-            "city": line[11],
+            "city": line[11].decode('iso-8859-1'),
             "meeting_type": line[12],
             "media": line[13],
             "comments": line[14]
@@ -96,7 +96,7 @@ class Command(BaseCommand):
 
     def read_line(self, line):
         # Columns
-        # 0: Posición
+        # 0: Posiciï¿½n
         # 1: Atleta
         # 2: Club
         # 3: Marca
@@ -106,10 +106,10 @@ class Command(BaseCommand):
         # 7: Evento
         # 8: Evento Resumido
         # 9: Fecha
-        # 10: Año
+        # 10: Aï¿½o
         # 11: Ciudad
         # 12: Meeting type
-        # 13: Vídeo
+        # 13: Vï¿½deo
         # 14: Observaciones
         position = line[0]
         athlete = Athlete.get_by_name(line[1])
