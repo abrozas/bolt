@@ -28,7 +28,7 @@ class Command(BaseCommand):
             if len(is_csv) == 0:
                 with open(file_name, 'rbU') as csvfile:
                     reader = csv.reader(csvfile, delimiter=';')
-                    race = ""
+                    event_race = ""
                     csv_num_line = 0
                     position = 0
                     for row in reader:
@@ -41,17 +41,18 @@ class Command(BaseCommand):
 
                             dict_line = self.line_to_dict(row)
 
-                            if len(dict_line.get('athlete')) < 2 or race == '':
-                                race = self.get_race(dict_line)
+                            if len(dict_line.get('athlete')) < 2 or event_race == '':
+                                event_race = self.get_race(dict_line)
                                 position = 0
                                 continue
                             else:
                                 # We get the athlete
+                                event_race = self.check_race(dict_line, event_race)
                                 athlete = self.get_athlete(dict_line)
                                 position += 1
                                 if dict_line.get('club'):
                                     self.add_athlete_to_club(athlete, dict_line.get('club'), dict_line.get('season'))
-                                self.add_result(athlete, race, dict_line, position)
+                                self.add_result(athlete, event_race, dict_line, position)
                         except Exception, e:
                             print csv_num_line, ':', e
 
@@ -80,7 +81,7 @@ class Command(BaseCommand):
             "position": line[0],
             "athlete": unicode(line[1].decode('iso-8859-1')),
             "club": (line[2])[:3],
-            "record": line[3],
+            "record": line[3].strip(),
             "race": line[4],
             "category": line[5],
             "round": line[6],
@@ -144,6 +145,27 @@ class Command(BaseCommand):
 
         return race
 
+    def check_race(self, dict_line, event_race):
+        race = event_race
+        if event_race.event != dict_line.get('race'):
+            try:
+                type = 'TT' if 'm' in dict_line.get('race') else 'LE'
+                return Race.objects.get(type=type, category=dict_line.get('category'), round=dict_line.get('round'), event=dict_line.get('race'),
+                                        meeting=event_race.meeting)
+            except Race.DoesNotExist:
+
+                race = Race()
+                race.type = 'TT' if 'm' in dict_line.get('race') else 'LE'
+                race.category = dict_line.get('category')
+                race.event = dict_line.get('race')
+                race.round = dict_line.get('round')
+                race.meeting = event_race.meeting
+                race.save()
+
+            return race
+        return event_race
+
+
     def get_meeting(self, data):
         try:
             return Meeting.objects.get(name__icontains=data.get('name'), date=data.get('date'))
@@ -165,6 +187,8 @@ class Command(BaseCommand):
             athlete.slug = self.slugify(dict_line.get('athlete'))
             athlete.save()
             return athlete
+        except Exception, e:
+            print e
 
     def slugify(self, text, delim=u'-'):
         """Generates an slightly worse ASCII-only slug."""
